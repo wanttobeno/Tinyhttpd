@@ -61,8 +61,6 @@ typedef  unsigned int socklen_t;
 #define  strcasecmp _stricmp
 #endif // WIN32
 
-#define ISspace(x) isspace((int)(x))
-
 #define SERVER_STRING "Server: jdbhttpd/0.1.0\r\n"
 #define STDIN   0
 #define STDOUT  1
@@ -80,6 +78,15 @@ void not_found(int);
 void serve_file(int, const char *);
 int startup(u_short *);
 void unimplemented(int);
+
+int ISspace(int c)
+{
+	if (c >= -1 && c <= 255)
+	{
+		return isspace(c);
+	}
+	return 0;
+}
 
 /**********************************************************************/
 /* A request has caused a call to accept() on the server port to
@@ -113,6 +120,11 @@ void accept_request(void *arg)
 	if (strcasecmp(method, "GET") && strcasecmp(method, "POST"))
 	{
 		unimplemented(client);
+#ifdef WIN32
+		closesocket(client);
+#else
+		close(client);
+#endif // WIN32
 		return;
 	}
 
