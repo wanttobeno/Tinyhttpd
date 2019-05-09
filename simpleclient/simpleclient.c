@@ -32,7 +32,14 @@ int main(int argc, char *argv[])
 	int len;
 	struct sockaddr_in address;
 	int result;
-	char ch = 'A';
+	char szBuf[] = "GET / HTTP/1.0\r\n\
+Host: 127.0.0.1:4000\r\n\
+Connection: keep-close\r\n\
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 SE 2.X MetaSr 1.0\r\n\
+Accept-Encoding: gzip, deflate\r\n\r\n\r\n";
+	unsigned long nLen = strlen(szBuf);
+	long nRead = 0;
+	char bufRead[512] = { 0 };
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	address.sin_family = AF_INET;
@@ -44,21 +51,21 @@ int main(int argc, char *argv[])
 	if (result == -1)
 	{
 		perror("oops: client1");
-		exit(1);
+		return -1;
 	}
 #ifdef WIN32
-	send(sockfd, &ch,1,0);
-	recv(sockfd, &ch, 1, 0);
+	send(sockfd, szBuf, nLen, 0);
+	nRead = recv(sockfd, bufRead, 512, 0);
 #else
-	write(sockfd, &ch, 1);
-	read(sockfd, &ch, 1);
+	write(sockfd, szBuf, nLen);
+	nRead = read(sockfd, bufRead, 512);
 #endif // WIN32
-	printf("char from server = %c\n", ch);
+	printf("buff from server = %s", szBuf);
 #ifdef WIN32
 	closesocket(sockfd);
 	WSACleanup();
 #else
 	close(sockfd);
 #endif
-	exit(0);
+	return 0;
 }

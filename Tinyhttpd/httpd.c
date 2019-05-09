@@ -96,6 +96,9 @@ int ISspace(int c)
 void accept_request(void *arg)
 {
 	int client = (intptr_t)arg;
+
+	printf("Time %lld,New Request %d \n", time(NULL),client);
+
 	char buf[1024] = { 0 };
 	size_t numchars;
 	char method[255] = { 0 };
@@ -120,11 +123,6 @@ void accept_request(void *arg)
 	if (strcasecmp(method, "GET") && strcasecmp(method, "POST"))
 	{
 		unimplemented(client);
-#ifdef WIN32
-		closesocket(client);
-#else
-		close(client);
-#endif // WIN32
 		return;
 	}
 
@@ -175,11 +173,6 @@ void accept_request(void *arg)
 		else
 			execute_cgi(client, path, method, query_string);
 	}
-#ifdef WIN32
-	closesocket(client);
-#else
-	close(client);
-#endif // WIN32
 }
 
 /**********************************************************************/
@@ -570,6 +563,9 @@ int main(void)
 		client_sock = accept(server_sock,
 			(struct sockaddr *)&client_name,
 			&client_name_len);
+		// https://stackoverflow.com/questions/41474299/checking-if-errno-eintr-what-does-it-mean
+		if (client_sock == EINTR)
+			continue;
 		if (client_sock == -1)
 			error_die("accept");
 		/* accept_request(&client_sock); */
